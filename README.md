@@ -33,7 +33,7 @@ public function club()
 }
 
 /**
- * 用户与旅行表，用户又多次旅行
+ * 用户与旅行表，用户有多次旅行
  *
  * @return \Illuminate\Database\Eloquent\Relations\HasMany
  */
