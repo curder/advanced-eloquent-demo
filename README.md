@@ -53,4 +53,56 @@ public function buddies()
 }
 ```
 
-## 
+## 过滤用户关联信息
+
+获取当前用户所在俱乐部或好友表列表信息。
+
+优化前，使用`Policy`：
+
+```php
+$query->where('club_id', $user->club_id)
+      ->orWhereIn('id', $user->buddies->pluck('id'));
+```
+
+使用`Policy`方式，使用命令 `php artisan make:policy UserPolicy` 创建对应`UserPolicy`：
+
+```php
+public function view(App\Models\User $user, App\Models\User $other) {
+    return $user->club_id === $other->club_id || $user->buddies->contains($other);
+}
+```
+
+修改数据调用
+
+```php
+     ->get()
+     ->filter(function ($user) {
+         return Auth::user()->can('view', $user);
+     })
+```
+
+优化后，创建 `Scope`：
+
+在 `User` 模型中创建 `visibleTo`：
+
+```php
+
+    /**
+     * 用户对数据的可见性
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \App\Models\User                   $user
+     */
+    public function scopeVisibleTo(\Illuminate\Database\Eloquent\Builder $query, App\Models\User $user) : void
+    {
+        $query->where(function ($query) use ($user) {
+            $query->where('club_id', $user->club_id)
+                  ->orWhereIn('id', $user->buddies->pluck('id'));
+        });
+    }
+```
+        
+修改数据调用      
+```php
+    ->visibleTo(\Illuminate\Support\Facades\Auth::user())
+```

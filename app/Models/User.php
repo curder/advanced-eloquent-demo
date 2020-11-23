@@ -4,9 +4,26 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * Class User
+ * @property integer id
+ * @property integer club_id
+ * @property string name
+ * @property string email
+ * @property string email_verified_at
+ * @property string password
+ * @property string remember_token
+ *
+ * @property \App\Models\Club club
+ * @property \Illuminate\Support\Collection trips
+ * @property \Illuminate\Support\Collection buddies
+ *
+ * @package App\Models
+ */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
@@ -71,4 +88,17 @@ class User extends Authenticatable
         return $this->belongsToMany(__CLASS__, 'buddies', 'user_id', 'buddy_id')->withTimestamps();
     }
 
+    /**
+     * 用户对数据的可见性
+     *
+     * @param Builder $query
+     * @param User    $user
+     */
+    public function scopeVisibleTo(Builder $query, User $user) : void
+    {
+        $query->where(function ($query) use ($user) {
+            $query->where('club_id', $user->club_id)
+                  ->orWhereIn('id', $user->buddies->pluck('id'));
+        });
+    }
 }
