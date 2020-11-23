@@ -14,16 +14,17 @@ class UserFactory extends Factory
      * @var string
      */
     protected $model = User::class;
-
     /**
      * Define the model's default state.
      *
      * @return array
+     * @throws \Exception
      */
     public function definition()
     {
         return [
             'name' => $this->faker->name,
+            'club_id' => random_int(1, 4),
             'email' => $this->faker->unique()->safeEmail,
             'email_verified_at' => now(),
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password

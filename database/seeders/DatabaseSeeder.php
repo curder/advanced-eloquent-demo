@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Club;
+use App\Models\Trip;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,6 +16,31 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
+        $daLocalsKnow = Club::create(['name' => 'Da Locals Know']);
+        $freshwaterFolk = Club::create(['name' => 'Freshwater Folk']);
+        $theNorthernPikes = Club::create(['name' => 'The Northern Pikes']);
+        $bassCatchersUnited = Club::create(['name' => 'Bass Catchers United']);
+
+        User::factory()->create([
+            'name' => 'Lloyd Montgomery',
+            'club_id' => $theNorthernPikes->id,
+            'email' => 'lloyd@example.com',
+        ])->buddies()->sync([
+            User::factory()->create(['name' => 'Elouise Kreiger', 'club_id' => $freshwaterFolk->id])->id,
+            User::factory()->create(['name' => 'Rusty Coleman', 'club_id' => $theNorthernPikes->id])->id,
+            User::factory()->create(['name' => 'Jed Davenport', 'club_id' => $daLocalsKnow->id])->id,
+            User::factory()->create(['name' => 'Jackson Lee', 'club_id' => $theNorthernPikes->id])->id,
+            User::factory()->create(['name' => 'Zeb Stansfield', 'club_id' => $bassCatchersUnited->id])->id,
+            User::factory()->create(['name' => 'Ottis Grayson', 'club_id' => $daLocalsKnow->id])->id,
+            User::factory()->create(['name' => 'Bob Stafford', 'club_id' => $bassCatchersUnited->id])->id,
+            User::factory()->create(['name' => 'Annie Johns', 'club_id' => $freshwaterFolk->id])->id,
+        ]);
+
+        User::factory(991)->create();
+
+        User::all()->each(function ($user) {
+            $user->trips()->saveMany(Trip::factory(300)->make());
+        });
+
     }
 }
