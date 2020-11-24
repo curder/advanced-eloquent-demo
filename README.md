@@ -106,3 +106,34 @@ public function view(App\Models\User $user, App\Models\User $other) {
 ```php
     ->visibleTo(\Illuminate\Support\Facades\Auth::user())
 ```
+
+## 数据排序
+
+根据 `buddies.buddy_id` 关联正序排列。添加 `scopeOrderByBuddiesFirst` 参数
+
+```php
+    /**
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \App\Models\User    $user
+     */
+    public function scopeOrderByBuddiesFirst(\Illuminate\Database\Eloquent\Builder $query, \App\Models\User $user) : void
+    {
+        $query->orderBySub(function ($query) use ($user) {
+            $query->selectRaw('true')
+                  ->from('buddies')
+                  ->whereColumn('buddies.buddy_id', 'users.id')
+                  ->where('user_id', $user->id)
+                  ->limit(1);
+        });
+    }
+```
+
+修改数据调用
+```php
+  ->orderByBuddiesFirst(Auth::user())
+  ->orderBy('name')
+```
+
+这样调用到的数据库查询，包含 `Buddy` 的用户排序在列表最后。
+
+

@@ -101,4 +101,19 @@ class User extends Authenticatable
                   ->orWhereIn('id', $user->buddies->pluck('id'));
         });
     }
+
+    /**
+     * @param Builder $query
+     * @param User    $user
+     */
+    public function scopeOrderByBuddiesFirst(Builder $query, User $user) : void
+    {
+        $query->orderBySub(function ($query) use ($user) {
+            $query->selectRaw('true')
+                  ->from('buddies')
+                  ->whereColumn('buddies.buddy_id', 'users.id')
+                  ->where('user_id', $user->id)
+                  ->limit(1);
+        });
+    }
 }
