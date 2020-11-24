@@ -8,6 +8,7 @@ Route::get('/', function () {
     Auth::login(User::find(1)->load(['club', 'buddies']));
 
     $users = User::with('club')
+                 ->withLastTripDate()
                  ->orderByBuddiesFirst(Auth::user())
                  ->orderBy('name')
                  ->visibleTo(Auth::user())

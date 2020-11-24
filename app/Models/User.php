@@ -56,6 +56,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'last_trip_at' => 'datetime',
     ];
 
     /**
@@ -113,6 +114,20 @@ class User extends Authenticatable
                   ->from('buddies')
                   ->whereColumn('buddies.buddy_id', 'users.id')
                   ->where('user_id', $user->id)
+                  ->limit(1);
+        });
+    }
+
+    /**
+     * @param Builder $query
+     */
+    public function scopeWithLastTripDate(Builder $query) : void
+    {
+        $query->addSubSelect('last_trip_at', function ($query) {
+            $query->select('went_at')
+                  ->from('trips')
+                  ->whereColumn('user_id', 'users.id')
+                  ->latest('went_at')
                   ->limit(1);
         });
     }

@@ -136,4 +136,56 @@ public function view(App\Models\User $user, App\Models\User $other) {
 
 这样调用到的数据库查询，包含 `Buddy` 的用户排序在列表最后。
 
+## 关联旅行的最后日期
 
+```html      
+<!-- header -->
+<div class="w-1/3 px-3 pt-6 pb-3 text-2xl text-green-600 font-semibold">Last Trip</div>
+
+<!-- body -->
+<div class="w-1/3 px-3 py-4 text-gray-800">{{ $user->trips->sortByDesc('went_at')->first()->went_at->diffForHumans() }}</div>
+```
+
+如上产生了大量额外的数据库查询。
+
+优化：
+```html
+<div class="w-1/3 px-3 py-4 text-gray-800">{{ $user->trips()->latest('went_at')->first()->went_at->diffForHumans() }}</div>
+```
+
+调用：
+```php
+$users = \App\Models\User::with('club', 'trips')
+```
+
+再优化：
+```html
+<div class="w-1/3 px-3 py-4 text-gray-800">{{ $user->last_trip_at->diffForHumans() }}</div>
+```                                                                                        
+编写`scope`
+```php
+    /**
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     */
+    public function scopeWithLastTripDate(\Illuminate\Database\Eloquent\Builder $query) : void
+    {
+        $query->addSubSelect('last_trip_at', function ($query) {
+            $query->select('went_at')
+                  ->from('trips')
+                  ->whereColumn('user_id', 'users.id')
+                  ->latest('went_at')
+                  ->limit(1);
+        });
+    }
+```  
+
+配置`casts`属性：
+```php
+    'last_trip_at' => 'datetime',
+```
+
+调用：
+```php              
+$users = User::with('club')
+    ->withLastTripDate()
+```
