@@ -107,6 +107,11 @@ $customers = Customer::with('company')->orderByName()->paginate();
 
     添加查询`scope`
     ```php
+    /**
+     * @param \Illuminate\Database\Eloquent\Builder  $query
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
     public function scopeWithLastInteractionDate(\Illuminate\Database\Eloquent\Builder $query)
     {
         $subQuery = \DB::table('interactions')
@@ -138,7 +143,10 @@ $customers = Customer::with('company')->orderByName()->paginate();
 
     修改 `scope`
     ```php
-    public function scopeWithLastInteractionDate($query)
+    /**
+     * @param \Illuminate\Database\Eloquent\Builder  $query
+     */
+    public function scopeWithLastInteractionDate(\Illuminate\Database\Eloquent\Builder $query)
     {
         $query->addSubSelect('last_interaction_date', \App\Models\Interaction::select('created_at')
             ->whereRaw('customer_id = customers.id')

@@ -20,6 +20,7 @@ class Customer extends Model
 
     protected $casts = [
         'birth_date' => 'date',
+        'last_interaction_date' => 'datetime',
     ];
 
     public function company() : BelongsTo
@@ -37,5 +38,15 @@ class Customer extends Model
     public function scopeOrderByName(Builder $query): void
     {
         $query->orderBy('last_name')->orderBy('first_name');
+    }
+    /**
+     * @param  Builder  $query
+     */
+    public function scopeWithLastInteractionDate(Builder $query) : void
+    {
+        $query->addSubSelect('last_interaction_date', \App\Models\Interaction::select('created_at')
+                                                                             ->whereRaw('customer_id = customers.id')
+                                                                             ->latest()
+        );
     }
 }

@@ -9,7 +9,10 @@ class CustomersController extends Controller
 {
     public function index(Request $request)
     {
-        $customers = Customer::with('company')->orderByName()->paginate();
+        $customers = \App\Models\Customer::with('company')
+                                         ->withLastInteractionDate()
+                                         ->orderByName()
+                                         ->paginate();
 
         return view('customers', ['customers' => $customers]);
     }
