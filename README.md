@@ -260,3 +260,8 @@ $users = User::with('club')
  $users = User::with('club')
                 ->withLastTrip()
 ```
+
+## 视频
+
+- [GitHub Repository](https://github.com/reinink/laracon2019)
+- [YouTube](https://www.youtube.com/watch?v=IBUXXErAtuk)
