@@ -52,3 +52,21 @@ public function scopeOrderByName(\Illuminate\Database\Eloquent\Builder $query): 
     $query->orderBy('last_name')->orderBy('first_name');
 }
 ```
+
+## 添加公司名
+
+通过关联关系获取公司名：
+
+```html
+<!-- table header -->
+<th>Company</th>
+
+<!-- table body -->
+<td>{{ $customer->company->name }}</td>
+```
+
+优化：懒加载关联公司
+
+```
+$customers = Customer::with('company')->orderByName()->paginate();
+```
