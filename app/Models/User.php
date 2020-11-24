@@ -80,6 +80,27 @@ class User extends Authenticatable
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function lastTrip()
+    {
+        return $this->belongsTo(\App\Models\Trip::class);
+    }
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     */
+    public function scopeWithLastTrip(\Illuminate\Database\Eloquent\Builder $query)
+    {
+        $query->addSubSelect('last_trip_id', function ($query) {
+            $query->select('id')
+                  ->from('trips')
+                  ->whereColumn('user_id', 'users.id')
+                  ->latest('went_at')
+                  ->limit(1);
+        })->with('lastTrip');
+    }
+
+    /**
      * 用户与好友表，用户有多个好友
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -125,6 +146,20 @@ class User extends Authenticatable
     {
         $query->addSubSelect('last_trip_at', function ($query) {
             $query->select('went_at')
+                  ->from('trips')
+                  ->whereColumn('user_id', 'users.id')
+                  ->latest('went_at')
+                  ->limit(1);
+        });
+    }
+
+    /**
+     * @param Builder $query
+     */
+    public function scopeWithLastTripLake(Builder $query) : void
+    {
+        $query->addSubSelect('last_trip_lake', function ($query) {
+            $query->select('lake')
                   ->from('trips')
                   ->whereColumn('user_id', 'users.id')
                   ->latest('went_at')

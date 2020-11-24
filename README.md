@@ -189,3 +189,74 @@ $users = \App\Models\User::with('club', 'trips')
 $users = User::with('club')
     ->withLastTripDate()
 ```
+
+## 关联最后旅行数据
+
+```html
+<div class="w-1/3 px-3 py-4 text-gray-800">
+    {{ $user->last_trip_at->diffForHumans() }}
+    <span class="text-sm text-gray-600">({{ $user->last_trip_lake }})</span>
+</div>
+```
+
+编写`scope`
+```php
+   /**
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     */
+    public function scopeWithLastTripLake(\Illuminate\Database\Eloquent\Builder $query) : void
+    {
+        $query->addSubSelect('last_trip_lake', function ($query) {
+            $query->select('lake')
+                  ->from('trips')
+                  ->whereColumn('user_id', 'users.id')
+                  ->latest('went_at')
+                  ->limit(1);
+        });
+    }
+```
+
+查询调用
+```php
+->withLastTripLake()
+```
+
+**添加动态关联关系**
+
+```php
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function lastTrip()
+    {
+        return $this->belongsTo(\App\Models\Trip::class);
+    }               
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     */
+    public function scopeWithLastTrip(\Illuminate\Database\Eloquent\Builder $query)
+    {
+        $query->addSubSelect('last_trip_id', function ($query) {
+            $query->select('id')
+                  ->from('trips')
+                  ->whereColumn('user_id', 'users.id')
+                  ->latest('went_at')
+                  ->limit(1);
+        })->with('lastTrip');
+    }
+```
+
+模版渲染：
+```html
+    <div class="w-1/3 px-3 py-4 text-gray-800">
+        {{ $user->lastTrip->went_at->diffForHumans() }}
+        <span class="text-sm text-gray-600">({{ $user->lastTrip->lake }})</span>
+    </div>
+```
+
+调用：
+```php
+ $users = User::with('club')
+                ->withLastTrip()
+```
