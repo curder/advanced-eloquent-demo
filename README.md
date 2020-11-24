@@ -70,3 +70,93 @@ public function scopeOrderByName(\Illuminate\Database\Eloquent\Builder $query): 
 ```
 $customers = Customer::with('company')->orderByName()->paginate();
 ```
+
+## 添加顾客互动表中最后的时间记录
+
+- 通过关联关系获取数据
+
+    ```html
+    <!-- table header -->
+    <th>Last Interaction</th>
+
+    <!-- table body -->
+    <td>{{ $customer->interactions->sortByDesc('created_at')->first()->created_at->diffForHumans() }}</td>
+    ```
+
+    添加查询关联关系
+    ```php
+    $customers = \App\Models\Customer::with('company', 'interactions')->orderByName()->paginate();
+    ```
+
+- 通过数据库查询
+
+    ```html
+    <td>{{ $customer->interactions()->latest()->first()->created_at->diffForHumans() }}</td>
+    ```
+
+    修改查询关联关系
+    ```
+    $customers = Customer::with('company')->orderByName()->paginate();
+    ```
+
+- 通过子查询
+
+    ```html
+    <td>{{ $customer->last_interaction_date->diffForHumans() }}</td>
+    ```
+
+    添加查询`scope`
+    ```php
+    public function scopeWithLastInteractionDate(\Illuminate\Database\Eloquent\Builder $query)
+    {
+        $subQuery = \DB::table('interactions')
+            ->select('created_at')
+            ->whereRaw('customer_id = customers.id')
+            ->latest()
+            ->limit(1);
+
+        return $query->select('customers.*')->selectSub($subQuery, 'last_interaction_date');
+    }
+    ```
+
+    修改查询语句
+    ```php
+    $customers = \App\Models\Customer::with('company')
+        ->withLastInteractionDate()
+        ->orderByName()
+        ->paginate();
+    ```
+    修改模型`casts`属性
+    ```php
+    protected $casts = [
+        'birth_date' => 'date',
+        'last_interaction_date' => 'datetime',
+    ];
+    ```
+
+- 通过子查询（优化）
+
+    修改 `scope`
+    ```php
+    public function scopeWithLastInteractionDate($query)
+    {
+        $query->addSubSelect('last_interaction_date', \App\Models\Interaction::select('created_at')
+            ->whereRaw('customer_id = customers.id')
+            ->latest()
+        );
+    }
+    ```
+
+    在 `app\Providers\AppServiceProvide.php` 的 `boot`方法中添加 `macro`：
+
+    ```php
+    use Illuminate\Database\Eloquent\Builder;
+
+    Builder::macro('addSubSelect', function ($column, $query) {
+        if (is_null($this->getQuery()->columns)) {
+            $this->select($this->getQuery()->from.'.*');
+        }
+
+        return $this->selectSub($query->limit(1)->getQuery(), $column);
+    });
+    ``` 
